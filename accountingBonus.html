@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>折舊計算機</title>
+  <style>
+    @font-face {
+      font-family: 'ChenYuluoyan 2.0 Thin';
+      src: url('ChenYuluoyan-2.0-Thin.ttf') format('truetype');
+    }
+
+    body {
+      font-family: 'ChenYuluoyan 2.0 Thin', sans-serif;
+      background: #f8f3fa;
+      padding: 40px;
+      color: #333;
+      font-size: 40px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 40px;
+      color: #5f4b8b;
+    }
+
+    .description {
+      text-align: center;
+      margin-bottom: 30px;
+      line-height: 1.8;
+      color: #6b4c9a;
+      font-size: 22px;
+    }
+
+    .container {
+      max-width: 600px;
+      background: #ffffff;
+      margin: auto;
+      padding: 30px 40px;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+      font-size: 22px;
+    }
+
+    label {
+      display: block;
+      margin-top: 20px;
+      font-weight: bold;
+      color: #5a3f8c;
+      font-size: 22px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 14px;
+      font-size: 22px;
+      font-family: 'ChenYuluoyan 2.0 Thin', sans-serif;
+      margin-top: 6px;
+      border: 1px solid #bba3e3;
+      border-radius: 8px;
+      background: #f3ecfb;
+      text-align: center;
+      color: #9b7dc9;
+      box-sizing: border-box;
+    }
+
+    input::placeholder {
+      color: #b19cd9;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #a47dd3;
+      box-shadow: 0 0 0 3px rgba(164, 125, 211, 0.2);
+      background-color: #f3ecfb;
+    }
+
+    select option {
+      background-color: #f3ecfb;
+      color: #5a3f8c;
+    }
+
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='10' viewBox='0 0 14 10'%3E%3Cpath fill='%236b4c9a' d='M7 10L0 0h14z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 14px 10px;
+      cursor: pointer;
+      color: #5a3f8c;
+    }
+
+    button {
+      margin-top: 25px;
+      width: 100%;
+      background: rgba(190, 150, 240, 0.85);
+      color: #5a3f8c;
+      padding: 16px;
+      border: none;
+      font-weight: bold;
+      border-radius: 10px;
+      font-size: 22px;
+      font-family: 'ChenYuluoyan 2.0 Thin', sans-serif;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+      box-shadow: 0 4px 10px rgba(155, 125, 201, 0.3);
+      backdrop-filter: blur(3px);
+    }
+
+    button:hover {
+      background: rgba(170, 120, 230, 0.9);
+      transform: translateY(-1px);
+    }
+
+    table {
+      margin-top: 30px;
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 20px;
+    }
+
+    th, td {
+      padding: 14px;
+      text-align: right;
+      border-bottom: 1px solid #ccc;
+    }
+
+    th {
+      background-color: #eee3f9;
+      color: #5a3f8c;
+    }
+
+    td:first-child, th:first-child {
+      text-align: center;
+    }
+
+    #unitsFields {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>折舊計算機</h1>
+  <div class="description">
+    Made by Amy and Jammie
+  </div>
+  <div class="container">
+    <label for="cost">設備成本</label>
+    <input type="text" id="cost" placeholder="請輸入設備成本" />
+
+    <label for="residual">殘值</label>
+    <input type="text" id="residual" placeholder="請輸入殘值" />
+
+    <label for="life">使用年限</label>
+    <input type="number" id="life" placeholder="請輸入使用年限" />
+
+    <label for="method">折舊方法</label>
+    <select id="method" onchange="toggleUnitsInput()">
+      <option value="straight">直線法</option>
+      <option value="units">作業量法</option>
+      <option value="syd">年數合計法</option>
+      <option value="ddb">倍數餘額遞減法</option>
+    </select>
+
+    <div id="unitsFields">
+      <label for="totalUnits">總使用量（單位為小時/年）</label>
+      <input type="number" id="totalUnits" placeholder="請輸入總使用量" />
+      <label for="yearlyUnits">每年使用量（請依序輸入並用逗號分隔 ex.2000,1500,...）</label>
+      <input type="text" id="yearlyUnits" placeholder="請輸入每年使用量" />
+    </div>
+
+    <button onclick="calculateDepreciation()">計算</button>
+
+    <table id="resultTable">
+      <thead>
+        <tr>
+          <th>年份</th>
+          <th>當年折舊</th>
+          <th>累積折舊</th>
+          <th>帳面價值</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    function parseNumber(str) {
+      return parseFloat(str.replace(/,/g, '')) || 0;
+    }
+
+    function formatWithCommas(value) {
+      let num = value.replace(/,/g, '').replace(/[^\d.]/g, '');
+      let parts = num.split('.');
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      return parts.join('.');
+    }
+
+    function setupCommaFormatting(inputId) {
+      const input = document.getElementById(inputId);
+      input.addEventListener('input', () => {
+        const caret = input.selectionStart;
+        const originalLength = input.value.length;
+        input.value = formatWithCommas(input.value);
+        const newLength = input.value.length;
+        input.setSelectionRange(
+          caret + (newLength - originalLength),
+          caret + (newLength - originalLength)
+        );
+      });
+    }
+
+    function toggleUnitsInput() {
+      const method = document.getElementById('method').value;
+      document.getElementById('unitsFields').style.display = (method === 'units') ? 'block' : 'none';
+    }
+
+    window.onload = () => {
+      setupCommaFormatting('cost');
+      setupCommaFormatting('residual');
+    };
+
+    function calculateDepreciation() {
+      const cost = parseNumber(document.getElementById('cost').value);
+      const residual = parseNumber(document.getElementById('residual').value);
+      const life = parseInt(document.getElementById('life').value);
+      const method = document.getElementById('method').value;
+
+      if (
+        isNaN(cost) ||
+        isNaN(residual) ||
+        isNaN(life) ||
+        cost <= residual ||
+        life <= 0
+      ) {
+        alert('請輸入正確數值，且成本必須大於殘值！');
+        return;
+      }
+
+      let tbody = document.querySelector('#resultTable tbody');
+      tbody.innerHTML = '';
+
+      let bookValue = cost;
+      let accumulated = 0;
+      let useStraight = false;
+      const straightRate = 1 / life;
+      const ddbRate = 2 * straightRate;
+      const sydSum = (life * (life + 1)) / 2;
+
+      if (method === 'units') {
+        const totalUnits = parseNumber(document.getElementById('totalUnits').value);
+        const yearlyUnits = document.getElementById('yearlyUnits').value
+          .split(',')
+          .map(u => parseNumber(u.trim()));
+
+        const totalUsed = yearlyUnits.reduce((a, b) => a + b, 0);
+
+        if (!totalUnits || totalUnits <= 0 || totalUsed > totalUnits) {
+          alert('請輸入正確的總使用量與每年使用量（總和不能超過總使用量）');
+          return;
+        }
+
+        for (let i = 0; i < yearlyUnits.length; i++) {
+          let unit = yearlyUnits[i];
+          let depreciation = (cost - residual) * (unit / totalUnits);
+          if (bookValue - depreciation < residual) {
+            depreciation = bookValue - residual;
+          }
+
+          accumulated += depreciation;
+          bookValue -= depreciation;
+
+          tbody.innerHTML += `<tr>
+            <td>${i + 1}</td>
+            <td>${depreciation.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td>${accumulated.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td>${bookValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+          </tr>`;
+
+          if (bookValue <= residual) break;
+        }
+
+        return;
+      }
+
+      for (let year = 1; year <= life; year++) {
+        let depreciation = 0;
+
+        if (method === 'straight' || useStraight) {
+          const remainingYears = life - year + 1;
+          depreciation = (bookValue - residual) / remainingYears;
+          useStraight = true;
+        } else if (method === 'ddb') {
+          let ddbDepreciation = bookValue * ddbRate;
+          let predictedBookValue = bookValue - ddbDepreciation;
+          const remainingYears = life - year + 1;
+          let straightDepreciation = (bookValue - residual) / remainingYears;
+
+          if (predictedBookValue < residual || ddbDepreciation < straightDepreciation) {
+            depreciation = straightDepreciation;
+            useStraight = true;
+          } else {
+            depreciation = ddbDepreciation;
+          }
+        } else if (method === 'syd') {
+          depreciation = ((life - year + 1) / sydSum) * (cost - residual);
+        }
+
+        if (bookValue - depreciation < residual) {
+          depreciation = bookValue - residual;
+        }
+
+        accumulated += depreciation;
+        bookValue -= depreciation;
+
+        tbody.innerHTML += `<tr>
+          <td>${year}</td>
+          <td>${depreciation.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+          <td>${accumulated.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+          <td>${bookValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+        </tr>`;
+
+        if (bookValue <= residual) break;
+      }
+    }
+  </script>
+</body>
+</html>
